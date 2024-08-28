@@ -45,23 +45,28 @@ else
 fi
 
 # Setup bin and shim locations for desired channel, and detect invalid channels
-case "$channel" in
-  "stable")
-    BIN=chrome/chrome
-    SHIM=google-chrome-stable
-    ;;
-  "beta")
-    BIN=chrome-beta/chrome
-    SHIM=google-chrome-beta
-    ;;
-  "unstable")
-    BIN=chrome-unstable/chrome
-    SHIM=google-chrome-unstable
-    ;;
-  *)
-    error "GOOGLE_CHROME_CHANNEL must be 'stable', 'beta', or 'unstable', not '$channel'."
-    ;;
-esac
+if [ -n "$major_version" ]; then
+  BIN=chrome/chrome
+  SHIM=google-chrome-stable
+else
+  case "$channel" in
+    "stable")
+      BIN=chrome/chrome
+      SHIM=google-chrome-stable
+      ;;
+    "beta")
+      BIN=chrome-beta/chrome
+      SHIM=google-chrome-beta
+      ;;
+    "unstable")
+      BIN=chrome-unstable/chrome
+      SHIM=google-chrome-unstable
+      ;;
+    *)
+      error "Invalid GOOGLE_CHROME_CHANNEL: '$channel'. Must be 'stable', 'beta', or 'unstable'."
+      ;;
+  esac
+fi
 
 # Install correct dependencies according to $STACK
 case "${STACK}" in
