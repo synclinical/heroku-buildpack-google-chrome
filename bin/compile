@@ -106,12 +106,22 @@ case "${STACK}" in
     error "STACK must be 'heroku-18', 'heroku-20' or 'heroku-22', not '${STACK}'."
 esac
 
-if [ ! -f $CACHE_DIR/PURGED_CACHE_V1 ]; then
-  topic "Purging cache"
+CHROME_VERSION_FILE="$CACHE_DIR/CHROME_VERSION"
+
+if [ -f "$CHROME_VERSION_FILE" ]; then
+  CACHED_VERSION=$(cat "$CHROME_VERSION_FILE")
+else
+  CACHED_VERSION=""
+fi
+
+if [ "$GOOGLE_CHROME_MAJOR_VERSION" != "$CACHED_VERSION" ]; then
+  topic "Chrome version changed, purging cache"
   rm -rf $CACHE_DIR/apt
   rm -rf $CACHE_DIR/archives
   rm -rf $CACHE_DIR/lists
-  touch $CACHE_DIR/PURGED_CACHE_V1
+  echo "$GOOGLE_CHROME_MAJOR_VERSION" > "$CHROME_VERSION_FILE"
+else
+  topic "Chrome version unchanged, using existing cache"
 fi
 
 topic "Installing Google Chrome"
