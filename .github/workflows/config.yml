@@ -8,15 +8,17 @@ jobs:
       matrix:
         stack: [heroku-20, heroku-22]
         channel: [stable, beta, unstable]
+        major_version: [null, 127, 126]
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Run Test
-      run: ./support/test.sh ${{ matrix.stack }}
-      env:
-        GOOGLE_CHROME_CHANNEL: ${{ matrix.channel }}
+      - name: Run Test
+        run: ./support/test.sh ${{ matrix.stack }}
+        env:
+          GOOGLE_CHROME_CHANNEL: ${{ matrix.channel }}
+          GOOGLE_CHROME_MAJOR_VERSION: ${{ matrix.major_version }}
 
   # dummy job to wait and block merge until all jobs have completed
   done:

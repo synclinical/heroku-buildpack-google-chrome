@@ -31,11 +31,17 @@ function indent() {
   esac
 }
 
-# Detect requested channel or default to stable
-if [ -f $ENV_DIR/GOOGLE_CHROME_CHANNEL ]; then
-  channel=$(cat $ENV_DIR/GOOGLE_CHROME_CHANNEL)
+# Detect requested major version or default to channel
+if [ -f $ENV_DIR/GOOGLE_CHROME_MAJOR_VERSION ]; then
+  major_version=$(cat $ENV_DIR/GOOGLE_CHROME_MAJOR_VERSION)
+  topic "Using Chrome major version $major_version"
 else
-  channel=stable
+  # Detect requested channel or default to stable
+  if [ -f $ENV_DIR/GOOGLE_CHROME_CHANNEL ]; then
+    channel=$(cat $ENV_DIR/GOOGLE_CHROME_CHANNEL)
+  else
+    channel=stable
+  fi
 fi
 
 # Setup bin and shim locations for desired channel, and detect invalid channels
@@ -59,14 +65,7 @@ esac
 
 # Install correct dependencies according to $STACK
 case "${STACK}" in
-  "heroku-24")
-    error "This buildpack has reached end of life. Please use https://github.com/heroku/heroku-buildpack-chrome-for-testing"
-    ;;
-  "heroku-18" | "heroku-20" | "heroku-22")
-    topic "###### WARNING ######"
-    topic "This buildpack is deprecated. Please use https://github.com/heroku/heroku-buildpack-chrome-for-testing"
-    topic "#####################"
-
+  "heroku-18" | "heroku-20" | "heroku-22" | "heroku-24")
     # the package list is found by using ci:debug then running ldd $GOOGLE_CHROME_BIN | grep not
     # also look here for more packages/notes https://developers.google.com/web/tools/puppeteer/troubleshooting
     PACKAGES="
@@ -95,6 +94,7 @@ case "${STACK}" in
       libxss1
       libxtst6
       fonts-liberation
+      jq
     "
     ;;
   *)
@@ -109,9 +109,22 @@ if [ ! -f $CACHE_DIR/PURGED_CACHE_V1 ]; then
   touch $CACHE_DIR/PURGED_CACHE_V1
 fi
 
-topic "Installing Google Chrome from the $channel channel."
+topic "Installing Google Chrome"
 
-PACKAGES="$PACKAGES https://dl.google.com/linux/direct/google-chrome-${channel}_current_amd64.deb"
+if [ -n "$major_version" ]; then
+  topic "Fetching latest version for Chrome major version $major_version"
+  latest_versions=$(curl -s "https://versionhistory.googleapis.com/v1/chrome/platforms/linux/channels/stable/versions")
+  VERSION=$(echo "$latest_versions" | jq -r ".versions[] | select(.version | startswith(\"$major_version.\")) | .version" | sort -V | tail -n1)
+  if [ -z "$VERSION" ]; then
+    error "Unable to find a version for Chrome major version $major_version"
+  fi
+  CHROME_URL="https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${VERSION}-1_amd64.deb"
+else
+  topic "Installing Google Chrome from the $channel channel."
+  CHROME_URL="https://dl.google.com/linux/direct/google-chrome-${channel}_current_amd64.deb"
+fi
+
+PACKAGES="$PACKAGES $CHROME_URL"
 
 APT_CACHE_DIR="$CACHE_DIR/apt/cache"
 APT_STATE_DIR="$CACHE_DIR/apt/state"

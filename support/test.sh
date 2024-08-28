@@ -14,6 +14,7 @@ docker build \
     --build-arg "BASE_IMAGE=${BASE_IMAGE}" \
     --build-arg "STACK=${STACK}" \
     ${GOOGLE_CHROME_CHANNEL:+--build-arg "GOOGLE_CHROME_CHANNEL=${GOOGLE_CHROME_CHANNEL}"} \
+    ${GOOGLE_CHROME_MAJOR_VERSION:+--build-arg "GOOGLE_CHROME_MAJOR_VERSION=${GOOGLE_CHROME_MAJOR_VERSION}"} \
     -t "${OUTPUT_IMAGE}" \
     .
 
