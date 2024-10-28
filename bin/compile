@@ -76,7 +76,6 @@ case "${STACK}" in
     PACKAGES="
       gconf-service
       libappindicator1
-      libasound2
       libatk1.0-0
       libatk-bridge2.0-0
       libcairo-gobject2
@@ -104,6 +103,15 @@ case "${STACK}" in
     ;;
   *)
     error "STACK must be 'heroku-18', 'heroku-20' or 'heroku-22', not '${STACK}'."
+esac
+
+case "${STACK}" in
+  "heroku-18" | "heroku-20" | "heroku-22")
+    PACKAGES="$PACKAGES libasound2"
+    ;;
+  "heroku-24")
+    PACKAGES="${PACKAGES} libasound2t64"
+    ;;
 esac
 
 CHROME_VERSION_FILE="$CACHE_DIR/CHROME_VERSION"
